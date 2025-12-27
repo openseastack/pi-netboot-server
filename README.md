@@ -442,7 +442,7 @@ A: No! Use "Proxy Mode" (default) to work alongside existing DHCP.
 
 ## License
 
-[Add your license here]
+Apache License 2.0
 
 ## Changelog
 
