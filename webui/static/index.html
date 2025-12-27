@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pi-netboot-server Control Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+        }
+
+        .card h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 24px;
+            background: #667eea;
+            margin-right: 12px;
+            border-radius: 2px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-top: 10px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        .device-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .device-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .device-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .device-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status.active {
+            background: #4caf50;
+        }
+
+        .status.inactive {
+            background: #ccc;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .image-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .image-item {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .image-item.active {
+            border-color: #4caf50;
+            background: #f1f8f4;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #667eea;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .switch .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .switch input:checked+.slider {
+            background-color: #ffc107;
+        }
+
+        .switch input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>OpenSeaStack Netboot Control Panel</h1>
+        </header>
+
+        <div class="grid">
+            <!-- Network Configuration - Left Column -->
+            <div class="card">
+                <h2>Network Configuration</h2>
+
+                <div style="margin-bottom: 20px;">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                        <strong>DHCP Mode:</strong>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span>Proxy</span>
+                            <label class="switch">
+                                <input type="checkbox" id="dhcp-mode-toggle" onchange="toggleDHCPMode()">
+                                <span class="slider"></span>
+                            </label>
+                            <span>Full DHCP Server</span>
+                        </div>
+                    </div>
+
+                    <!-- Proxy Mode Info -->
+                    <div id="proxy-mode-info"
+                        style="background: #f0f7ff; border-left: 4px solid #667eea; padding: 12px; border-radius: 4px; margin-bottom: 15px;">
+                        <strong>ℹ️ Proxy Mode (Recommended)</strong>
+                        <p style="margin: 5px 0 0 0; color: #666;">Works alongside your existing router. Provides boot
+                            info only - router assigns IPs.</p>
+                    </div>
+
+                    <!-- Full DHCP Mode Settings -->
+                    <div id="dhcp-mode-settings" style="display: none;">
+                        <div
+                            style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; margin-bottom: 15px;">
+                            <strong>⚠️ Full DHCP Server Mode</strong>
+                            <p style="margin: 5px 0 0 0; color: #666;">Takes over DHCP. May conflict with your router!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="applyDHCPSettings()" style="background: #ffc107; color: #000;">Apply DHCP Settings
+                    (Requires Restart)</button>
+            </div>
+
+            <!-- Network Status - New Card -->
+            <div class="card">
+                <h2>Network Status</h2>
+
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="padding: 12px; background: #f5f5f5; border-radius: 4px;">
+                        <strong>Current Mode:</strong> <span id="current-mode-display">Proxy Mode</span>
+                    </div>
+
+                    <div style="padding: 12px; background: #f5f5f5; border-radius: 4px;">
+                        <strong>DHCP Status:</strong> <span id="dhcp-status">Loading...</span>
+                    </div>
+
+                    <div
+                        style="padding: 12px; background: #e8f5e9; border-radius: 4px; border-left: 4px solid #4caf50;">
+                        <strong style="color: #2e7d32;">📡 Latest Boot Device</strong>
+                        <div id="latest-boot-info" style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                            <div style="margin-bottom: 5px;"><strong>IP:</strong> <span id="latest-ip">-</span></div>
+                            <div style="margin-bottom: 5px;"><strong>MAC:</strong> <span id="latest-mac">-</span></div>
+                            <div style="margin-bottom: 5px;"><strong>Image:</strong> <span id="latest-image">-</span>
+                            </div>
+                            <div><strong>Last Boot:</strong> <span id="latest-boot-time">-</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connected Devices - Full Width -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>Connected Devices</h2>
+
+                <table class="device-table" id="device-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"></th>
+                            <th>IP</th>
+                            <th>MAC</th>
+                            <th>Last Boot</th>
+                            <th style="width: 60px;">Boots</th>
+                            <th>Image</th>
+                            <th style="width: 120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="device-list">
+                        <tr>
+                            <td colspan="7" style="text-align:center; color: #999;">No devices detected</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button class="secondary" onclick="refreshDevices()" style="margin-top: 15px;">Refresh Devices</button>
+            </div>
+
+            <div class="card">
+                <h2>Image Manager</h2>
+
+                <div class="info-box" id="release-info" style="display:none;">
+                    <strong id="release-version"></strong>
+                    <p id="release-size"></p>
+                </div>
+
+                <button onclick="checkLatestRelease()">Check Latest Release</button>
+                <button onclick="downloadRelease()" id="download-btn" style="display:none;">Download Latest</button>
+
+                <h3 style="margin-top: 20px; margin-bottom: 10px;">Upload from Local Machine</h3>
+                <div id="drop-zone"
+                    style="border: 2px dashed #667eea; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s;">
+                    <input type="file" id="file-input" accept=".img,.img.gz,.tar.gz" style="display: none;">
+                    <p style="margin: 0; color: #666;">
+                        📁 Click to browse or drag & drop<br>
+                        <span style="font-size: 0.9em; color: #999;">Supported: .img, .img.gz, .tar.gz</span>
+                    </p>
+                </div>
+                <div id="upload-progress" style="display: none; margin-top: 10px;">
+                    <div style="background: #f0f0f0; border-radius: 4px; overflow: hidden;">
+                        <div id="progress-bar"
+                            style="height: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 0%; transition: width 0.3s;">
+                        </div>
+                    </div>
+                    <p id="upload-status" style="margin-top: 5px; color: #666; font-size: 0.9em;">Uploading...</p>
+                </div>
+
+                <h3 style="margin-top: 20px; margin-bottom: 10px;">Imported Images</h3>
+                <ul class="image-list" id="image-list"></ul>
+            </div>
+
+            <!-- Image Manager -->
+
+            <!-- Help & Troubleshooting -->
+            <div class="card">
+                <h2>Setup & Troubleshooting</h2>
+
+                <div
+                    style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 12px; border-radius: 4px; margin-bottom: 15px;">
+                    <strong>⚠️ Pi EEPROM Required</strong>
+                    <p style="margin: 8px 0 0 0; color: #666; font-size: 0.9em;">Network boot must be enabled in Pi
+                        EEPROM before netbooting.</p>
+                </div>
+
+                <details style="margin-bottom: 12px;">
+                    <summary
+                        style="cursor: pointer; font-weight: 600; padding: 8px; background: #f5f5f5; border-radius: 4px;">
+                        📝 EEPROM Setup
+                    </summary>
+                    <div style="padding: 12px; background: #fafafa; border-radius: 0 0 4px 4px; font-size: 0.85em;">
+                        <p><strong>On existing OS:</strong></p>
+                        <pre
+                            style="background: #1e1e1e; color: #d4d4d4; padding: 8px; border-radius: 4px; overflow-x: auto; font-size: 0.8em; margin: 5px 0;">sudo rpi-eeprom-config --edit</pre>
+                        <p style="margin: 8px 0 4px 0;">Set: <code
+                                style="background: #e0e0e0; padding: 2px 4px; border-radius: 2px; font-size: 0.85em;">BOOT_ORDER=0x241</code>
+                        </p>
+                        <p style="margin: 0; color: #666; font-size: 0.85em;">Boot order: SD→NVMe→Network</p>
+                    </div>
+                </details>
+
+                <details style="margin-bottom: 12px;">
+                    <summary
+                        style="cursor: pointer; font-weight: 600; padding: 8px; background: #f5f5f5; border-radius: 4px;">
+                        🔧 Troubleshooting
+                    </summary>
+                    <div style="padding: 12px; background: #fafafa; border-radius: 0 0 4px 4px; font-size: 0.85em;">
+                        <p style="margin: 0 0 6px 0;"><strong>No devices showing:</strong></p>
+                        <ul style="margin: 0 0 10px 0; padding-left: 18px; color: #666;">
+                            <li>Check Pi on same subnet</li>
+                            <li>Verify EEPROM configured</li>
+                            <li>Check logs below</li>
+                        </ul>
+
+                        <p style="margin: 0 0 6px 0;"><strong>Boot fails:</strong></p>
+                        <ul style="margin: 0 0 10px 0; padding-left: 18px; color: #666;">
+                            <li>Activate an image above</li>
+                            <li>Check NFS in logs</li>
+                        </ul>
+
+                        <p style="margin: 0 0 6px 0;"><strong>DHCP conflicts:</strong></p>
+                        <ul style="margin: 0; padding-left: 18px; color: #666;">
+                            <li>Use Proxy mode with router</li>
+                            <li>Full DHCP for isolated nets</li>
+                        </ul>
+                    </div>
+                </details>
+
+                <details>
+                    <summary
+                        style="cursor: pointer; font-weight: 600; padding: 8px; background: #f5f5f5; border-radius: 4px;">
+                        📚 Boot Values
+                    </summary>
+                    <div style="padding: 12px; background: #fafafa; border-radius: 0 0 4px 4px; font-size: 0.85em;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="background: #e0e0e0;">
+                                <th style="padding: 4px; border: 1px solid #ccc; font-size: 0.85em;">Value</th>
+                                <th style="padding: 4px; border: 1px solid #ccc; font-size: 0.85em;">Boot</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px; border: 1px solid #ccc;"><code
+                                        style="font-size: 0.8em;">1</code></td>
+                                <td style="padding: 4px; border: 1px solid #ccc;">SD Card</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px; border: 1px solid #ccc;"><code
+                                        style="font-size: 0.8em;">2</code></td>
+                                <td style="padding: 4px; border: 1px solid #ccc;">Network</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px; border: 1px solid #ccc;"><code
+                                        style="font-size: 0.8em;">4</code></td>
+                                <td style="padding: 4px; border: 1px solid #ccc;">NVMe/USB</td>
+                            </tr>
+                        </table>
+                        <p style="margin: 8px 0 0 0; color: #666; font-size: 0.85em;"><strong>Recommended:</strong>
+                            <code style="background: #e0e0e0; padding: 2px 4px;">0x241</code>
+                        </p>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Live Server Logs (Collapsible) -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div onclick="toggleLogs()"
+                    style="cursor: pointer; display: flex; align-items: center; gap: 10px; user-select: none;">
+                    <h2 style="margin: 0;"><span id="logs-arrow"
+                            style="display: inline-block; transition: transform 0.3s;">▶</span> Live Server Logs</h2>
+                    <small style="color: #999;">(Click to expand)</small>
+                </div>
+
+                <div id="logs-content" style="display: none; margin-top: 15px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <button onclick="refreshLogs()">Refresh Logs</button>
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="auto-refresh-logs" checked>
+                            <span>Auto-refresh (10s)</span>
+                        </label>
+                    </div>
+
+                    <!-- Stack logs vertically -->
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div>
+                            <h3 style="color: #667eea; font-size: 1em; margin-bottom: 8px;">DHCP/TFTP (dnsmasq)</h3>
+                            <pre id="log-dnsmasq"
+                                style="background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px; height: 250px; overflow-y: auto; font-size: 0.75em; font-family: monospace;">Loading...</pre>
+                        </div>
+                        <div>
+                            <h3 style="color: #667eea; font-size: 1em; margin-bottom: 8px;">NFS Server (unfsd)</h3>
+                            <pre id="log-unfsd"
+                                style="background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px; height: 250px; overflow-y: auto; font-size: 0.75em; font-family: monospace;">Loading...</pre>
+                        </div>
+                        <div>
+                            <h3 style="color: #667eea; font-size: 1em; margin-bottom: 8px;">Web UI</h3>
+                            <pre id="log-webui"
+                                style="background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px; height: 250px; overflow-y: auto; font-size: 0.75em; font-family: monospace;">Loading...</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Write to Disk Modal -->
+    <div class="modal" id="write-modal">
+        <div class="modal-content">
+            <h2>⚠️ Write to Disk</h2>
+            <div class="warning">
+                <strong>WARNING:</strong> This will erase ALL data on the selected device!
+                <br><br>
+                Make sure you have a backup or are using a blank SD card/NVMe.
+            </div>
+            <p>Device IP: <strong id="target-ip"></strong></p>
+            <p>Target Device: <input type="text" id="target-device" value="/dev/mmcblk0"
+                    placeholder="/dev/mmcblk0 or /dev/nvme0n1"></p>
+            <button class="danger" onclick="confirmWrite()">I Understand - Write Now</button>
+            <button class="secondary" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Progress Modal -->
+    <div class="modal" id="progress-modal" style="display: none;">
+        <div class="modal-content">
+            <h2>📝 Writing to Disk</h2>
+            <div style="margin: 20px 0;">
+                <div style="background: #f0f0f0; border-radius: 8px; padding: 15px;">
+                    <div id="progress-stage" style="font-weight: bold; margin-bottom: 10px;">Preparing...</div>
+                    <div id="progress-message" style="color: #666; margin-bottom: 15px;">Initializing write operation
+                    </div>
+                    <div style="background: #ddd; height: 30px; border-radius: 15px; overflow: hidden;">
+                        <div id="progress-bar"
+                            style="background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; width: 0%; transition: width 0.3s;">
+                        </div>
+                    </div>
+                    <div id="progress-percent"
+                        style="text-align: center; margin-top: 10px; font-size: 18px; font-weight: bold;">0%</div>
+                </div>
+            </div>
+            <div id="progress-error"
+                style="display: none; background: #fee; border: 2px solid #f66; border-radius: 8px; padding: 15px; color: #c00;">
+            </div>
+            <button id="progress-close-btn" style="display: none;" class="secondary"
+                onclick="closeProgressModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        let currentRelease = null;
+        let selectedIP = null;
+
+        // Check for latest GitHub release
+        async function checkLatestRelease() {
+            const info = document.getElementById('release-info');
+            const btn = document.getElementById('download-btn');
+
+            try {
+                const res = await fetch('/api/releases/latest');
+                currentRelease = await res.json();
+
+                document.getElementById('release-version').textContent = `Version: ${currentRelease.version}`;
+                document.getElementById('release-size').textContent = `Size: ${currentRelease.size_mb} MB`;
+
+                info.style.display = 'block';
+                btn.style.display = 'block';
+            } catch (err) {
+                alert('Failed to fetch release: ' + err.message);
+            }
+        }
+
+        // Download latest release
+        async function downloadRelease() {
+            if (!currentRelease || !currentRelease.download_url) return;
+
+            try {
+                const res = await fetch('/api/images/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: currentRelease.download_url,
+                        version: currentRelease.version
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert('Download complete!');
+                    loadImages();
+                } else {
+                    alert('Download failed: ' + data.error);
+                }
+            } catch (err) {
+                alert('Download error: ' + err.message);
+            }
+        }
+
+        // File upload functionality
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        // Click to browse
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        // Drag & drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#764ba2';
+            dropZone.style.background = '#f8f9ff';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#667eea';
+            dropZone.style.background = 'transparent';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#667eea';
+            dropZone.style.background = 'transparent';
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                uploadFile(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                uploadFile(e.target.files[0]);
+            }
+        });
+
+        // Upload file
+        async function uploadFile(file) {
+            const progressDiv = document.getElementById('upload-progress');
+            const progressBar = document.getElementById('progress-bar');
+            const statusText = document.getElementById('upload-status');
+
+            progressDiv.style.display = 'block';
+            statusText.textContent = `Uploading ${file.name}...`;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const xhr = new XMLHttpRequest();
+
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percent = (e.loaded / e.total) * 100;
+                        progressBar.style.width = percent + '%';
+                        statusText.textContent = `Uploading... ${Math.round(percent)}%`;
+                    }
+                });
+
+                xhr.addEventListener('load', () => {
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        statusText.textContent = 'Upload complete! Processing...';
+
+                        setTimeout(() => {
+                            progressDiv.style.display = 'none';
+                            progressBar.style.width = '0%';
+                            loadImages();
+                            alert('Image uploaded successfully!');
+                        }, 1000);
+                    } else {
+                        const data = JSON.parse(xhr.responseText);
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        progressDiv.style.display = 'none';
+                    }
+                });
+
+                xhr.addEventListener('error', () => {
+                    alert('Upload failed: Network error');
+                    progressDiv.style.display = 'none';
+                });
+
+                xhr.open('POST', '/api/images/upload');
+                xhr.send(formData);
+
+            } catch (err) {
+                alert('Upload error: ' + err.message);
+                progressDiv.style.display = 'none';
+            }
+        }
+
+        // Load images list
+        async function loadImages() {
+            try {
+                const res = await fetch('/api/images/list');
+                const data = await res.json();
+
+                const list = document.getElementById('image-list');
+                list.innerHTML = data.images.map(img => `
+                    <li class="image-item ${img.active ? 'active' : ''}">
+                        <div>
+                            <span class="status ${img.active ? 'active' : 'inactive'}"></span>
+                            ${img.name}
+                            <span style="color: #999; font-size: 0.9em;">(${img.size_mb} MB)</span>
+                        </div>
+                        ${!img.active ? `<button onclick="activateImage('${img.name}')">Activate</button>` : '<span style="color: #4caf50;">✓ Active</span>'}
+                    </li>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load images:', err);
+            }
+        }
+
+        // Activate image
+        async function activateImage(name) {
+            try {
+                const res = await fetch('/api/images/activate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    loadImages();
+                } else {
+                    alert('Activation failed: ' + data.error);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // Refresh devices
+        // Format relative time (e.g., "2 minutes ago")
+        function formatRelativeTime(isoTimestamp) {
+            if (!isoTimestamp) return 'Never';
+
+            try {
+                const bootTime = new Date(isoTimestamp);
+                const now = new Date();
+                const diffMs = now - bootTime;
+                const diffSeconds = Math.floor(diffMs / 1000);
+                const diffMinutes = Math.floor(diffSeconds / 60);
+                const diffHours = Math.floor(diffMinutes / 60);
+                const diffDays = Math.floor(diffHours / 24);
+
+                if (diffSeconds < 60) return 'Just now';
+                if (diffMinutes < 60) return `${diffMinutes} min ago`;
+                if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+                return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+            } catch {
+                return 'Unknown';
+            }
+        }
+
+        // Check if device booted recently (within 5 minutes)
+        function isRecentBoot(isoTimestamp) {
+            if (!isoTimestamp) return false;
+            try {
+                const bootTime = new Date(isoTimestamp);
+                const now = new Date();
+                const diffMs = now - bootTime;
+                return diffMs < 5 * 60 * 1000; // 5 minutes
+            } catch {
+                return false;
+            }
+        }
+
+        async function refreshDevices() {
+            try {
+                const res = await fetch('/api/devices');
+                const data = await res.json();
+
+                const tbody = document.getElementById('device-list');
+                if (data.devices.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: #999;">No devices detected</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.devices.map(dev => {
+                    const isRecent = isRecentBoot(dev.last_boot);
+                    const statusDot = isRecent ? 'active' : 'inactive';
+                    const bootTime = formatRelativeTime(dev.last_boot);
+                    const bootCount = dev.boot_count || 0;
+                    const imageName = dev.image || 'None';
+
+                    return `
+                        <tr>
+                            <td><span class="status ${statusDot}"></span></td>
+                            <td>${dev.ip}</td>
+                            <td style="font-family: monospace; font-size: 0.9em;">${dev.mac}</td>
+                            <td>${bootTime}</td>
+                            <td>${bootCount}</td>
+                            <td style="font-size: 0.85em; color: #667eea; font-weight: 500;">${imageName}</td>
+                            <td><button class="danger" onclick="showWriteModal('${dev.ip}')">Write to Disk</button></td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Failed to refresh devices:', err);
+            }
+        }
+
+        // Show write modal
+        function showWriteModal(ip) {
+            selectedIP = ip;
+            document.getElementById('target-ip').textContent = ip;
+            document.getElementById('write-modal').classList.add('show');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('write-modal').classList.remove('show');
+        }
+
+        // Confirm write
+        let progressPollInterval = null;
+
+        async function confirmWrite() {
+            const device = document.getElementById('target-device').value;
+
+            // Close confirmation modal, show progress modal
+            closeModal();
+            showProgressModal();
+
+            try {
+                const res = await fetch(`/api/devices/${selectedIP}/write-disk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ device })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showProgressError(data.error || 'Failed to start write operation');
+                    return;
+                }
+
+                // Start polling for progress
+                startProgressPolling();
+
+            } catch (err) {
+                showProgressError('Error: ' + err.message);
+            }
+        }
+
+        function showProgressModal() {
+            document.getElementById('progress-modal').style.display = 'flex';
+            document.getElementById('progress-error').style.display = 'none';
+            document.getElementById('progress-close-btn').style.display = 'none';
+            updateProgressUI('wiping', 0, 'Preparing to write...');
+        }
+
+        function closeProgressModal() {
+            document.getElementById('progress-modal').style.display = 'none';
+            if (progressPollInterval) {
+                clearInterval(progressPollInterval);
+                progressPollInterval = null;
+            }
+            loadDevices();
+        }
+
+        function updateProgressUI(stage, percent, message) {
+            const stageNames = {
+                'idle': '⏳ Idle',
+                'wiping': '🧹 Wiping Partition Table',
+                'writing': '📝 Writing Image',
+                'syncing': '🔄 Synchronizing',
+                'complete': '✅ Complete!',
+                'error': '❌ Error'
+            };
+
+            document.getElementById('progress-stage').textContent = stageNames[stage] || stage;
+            document.getElementById('progress-message').textContent = message;
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('progress-percent').textContent = percent + '%';
+        }
+
+        function showProgressError(error) {
+            document.getElementById('progress-error').textContent = error;
+            document.getElementById('progress-error').style.display = 'block';
+            document.getElementById('progress-close-btn').style.display = 'block';
+            if (progressPollInterval) {
+                clearInterval(progressPollInterval);
+                progressPollInterval = null;
+            }
+        }
+
+        function startProgressPolling() {
+            progressPollInterval = setInterval(async () => {
+                try {
+                    // Poll through netboot server to avoid CORS
+                    const res = await fetch(`/api/devices/${selectedIP}/status`);
+                    const data = await res.json();
+
+                    updateProgressUI(data.stage, data.percent, data.message);
+
+                    if (data.stage === 'complete') {
+                        clearInterval(progressPollInterval);
+                        progressPollInterval = null;
+                        setTimeout(() => {
+                            alert('Write complete! Pi should now boot from disk.');
+                            closeProgressModal();
+                        }, 2000);
+                    } else if (data.stage === 'error') {
+                        showProgressError(data.error || 'Unknown error occurred');
+                    }
+                } catch (err) {
+                    // Pi might be rebooting, keep polling
+                    console.log('Poll error (normal during reboot):', err);
+                }
+            }, 2000); // Poll every 2 seconds
+        }
+
+        // Refresh logs
+        async function refreshLogs() {
+            try {
+                const res = await fetch('/api/logs');
+                const data = await res.json();
+
+                if (data.logs) {
+                    document.getElementById('log-dnsmasq').textContent = data.logs.dnsmasq || 'No logs available';
+                    document.getElementById('log-unfsd').textContent = data.logs.unfsd || 'No logs available';
+                    document.getElementById('log-webui').textContent = data.logs.webui || 'No logs available';
+
+                    // Auto-scroll to bottom
+                    ['log-dnsmasq', 'log-unfsd', 'log-webui'].forEach(id => {
+                        const elem = document.getElementById(id);
+                        elem.scrollTop = elem.scrollHeight;
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to refresh logs:', err);
+            }
+        }
+
+        // Toggle logs visibility
+        function toggleLogs() {
+            const content = document.getElementById('logs-content');
+            const arrow = document.getElementById('logs-arrow');
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                arrow.style.transform = 'rotate(90deg)';
+            } else {
+                content.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Toggle DHCP mode
+        function toggleDHCPMode() {
+            const toggle = document.getElementById('dhcp-mode-toggle');
+            const isFullMode = toggle.checked;
+
+            document.getElementById('proxy-mode-info').style.display = isFullMode ? 'none' : 'block';
+            document.getElementById('dhcp-mode-settings').style.display = isFullMode ? 'block' : 'none';
+            document.getElementById('current-mode-badge').textContent = isFullMode ? 'Full DHCP Mode' : 'Proxy Mode';
+            document.getElementById('current-mode-badge').style.background = isFullMode ? '#ffc107' : '#667eea';
+            document.getElementById('mode-label-proxy').style.fontWeight = isFullMode ? 'normal' : '600';
+            document.getElementById('mode-label-proxy').style.color = isFullMode ? '#999' : '#667eea';
+            document.getElementById('mode-label-full').style.fontWeight = isFullMode ? '600' : 'normal';
+            document.getElementById('mode-label-full').style.color = isFullMode ? '#f57c00' : '#999';
+
+            if (isFullMode) loadNetworkInterfaces();
+        }
+
+        async function loadNetworkInterfaces() {
+            try {
+                const res = await fetch('/api/network/interfaces');
+                const data = await res.json();
+                const select = document.getElementById('interface-select');
+                select.innerHTML = '';
+
+                if (data.interfaces && data.interfaces.length > 0) {
+                    data.interfaces.forEach(iface => {
+                        const option = document.createElement('option');
+                        option.value = iface.name;
+                        option.textContent = `${iface.name} (${iface.ip})`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">No interfaces found</option>';
+                }
+            } catch (err) {
+                console.error('Failed to load interfaces:', err);
+            }
+        }
+
+        async function applyDHCPSettings() {
+            const iface = document.getElementById('interface-select').value;
+            const range = document.getElementById('dhcp-range').value;
+
+            if (!iface || !range) return alert('Please select an interface and specify a DHCP range');
+            if (!confirm('This will restart the netboot server with DHCP mode. Continue?')) return;
+
+            try {
+                const res = await fetch('/api/network/mode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: 'full', interface: iface, range: range })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert('DHCP mode applied! Server will restart...');
+                    setTimeout(() => location.reload(), 3000);
+                } else {
+                    alert(data.message || 'Failed to apply settings');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function loadNetworkStatus() {
+            try {
+                const res = await fetch('/api/network/status');
+                const data = await res.json();
+                const statusElem = document.getElementById('dhcp-status');
+                const modeDisplayElem = document.getElementById('current-mode-display');
+                const toggle = document.getElementById('dhcp-mode-toggle');
+
+                if (data.mode) {
+                    const modeText = data.mode === 'full' ? 'Full DHCP Server' : 'Proxy Mode';
+                    const subnet = data.subnet || 'detecting...';
+                    const serverIP = data.server_ip || 'detecting...';
+                    const existingDHCP = data.existing_dhcp_server || 'None detected';
+
+                    // Update mode display
+                    if (modeDisplayElem) {
+                        modeDisplayElem.textContent = modeText;
+                    }
+
+                    // Update status with DHCP server detection
+                    if (statusElem) {
+                        if (existingDHCP !== 'None detected') {
+                            statusElem.innerHTML = `Proxy Mode - Existing DHCP server detected at <strong>${existingDHCP}</strong>`;
+                        } else {
+                            statusElem.innerHTML = `${modeText} - Server IP: <strong>${serverIP}</strong>`;
+                        }
+                    }
+
+                    // Update toggle
+                    if (toggle) {
+                        toggle.checked = data.mode === 'full';
+                        if (data.mode === 'full') toggleDHCPMode();
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load network status:', err);
+                const statusElem = document.getElementById('dhcp-status');
+                if (statusElem) {
+                    statusElem.textContent = 'Error loading status';
+                }
+            }
+        }
+
+        // Initial load
+        loadImages();
+        refreshDevices();
+        refreshLogs();
+
+        // Initial load
+        loadNetworkStatus();
+
+        // Auto-refresh
+        setInterval(refreshDevices, 10000);
+        setInterval(loadNetworkStatus, 15000); // Refresh network status every 15s
+        setInterval(() => {
+            if (document.getElementById('auto-refresh-logs').checked) {
+                refreshLogs();
+            }
+        }, 10000);
+    </script>
+</body>
+
+</html>

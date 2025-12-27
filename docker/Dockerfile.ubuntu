@@ -1,0 +1,72 @@
+FROM ubuntu:22.04
+
+LABEL maintainer="OpenSeaStack"
+LABEL description="Raspberry Pi Netboot Development Server"
+
+# Avoid interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install core services
+RUN apt-get update && apt-get install -y \
+    dnsmasq \
+    rpcbind \
+    iproute2 \
+    net-tools \
+    curl \
+    rsync \
+    python3 \
+    python3-pip \
+    build-essential \
+    flex \
+    bison \
+    libfl-dev \
+    git \
+    autotools-dev \
+    automake \
+    libtool \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies for Web UI
+RUN pip3 install --no-cache-dir \
+    flask \
+    flask-cors \
+    requests \
+    paramiko
+
+# Build unfs3 from source (not in Ubuntu 22.04 repos)
+WORKDIR /tmp
+RUN git clone https://github.com/unfs3/unfs3.git && \
+    cd unfs3 && \
+    ./bootstrap && \
+    ./configure && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf unfs3
+WORKDIR /
+
+# Create directories for NFS and TFTP
+RUN mkdir -p /nfs/rootfs /tftpboot /var/log/netboot /images
+
+# Copy configuration templates  
+COPY docker/configs/dnsmasq.conf /etc/dnsmasq.conf.template
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Copy Web UI
+COPY webui /webui
+
+# Expose ports:
+# 67/udp  - DHCP
+# 69/udp  - TFTP  
+# 111     - RPC portmapper
+# 2049    - NFS
+# 38434   - Web UI
+EXPOSE 67/udp 69/udp 111 2049 38434
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD pgrep dnsmasq && pgrep rpc.nfsd || exit 1
+
+ENTRYPOINT ["/entrypoint.sh"]

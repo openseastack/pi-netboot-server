@@ -1,0 +1,54 @@
+version: '3.8'
+
+# pi-netboot-server Docker Compose Configuration
+# 
+# Usage:
+#   docker compose up -d        # Start server
+#   docker compose down         # Stop server
+#   docker compose logs -f      # View logs
+
+services:
+  netboot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: pi-netboot-server
+    privileged: true
+    network_mode: host
+    
+    environment:
+      # DHCP Mode: proxy (default) or full
+      - DHCP_MODE=${DHCP_MODE:-proxy}
+      # Only needed for full DHCP mode
+      - DHCP_RANGE=${DHCP_RANGE:-}
+      # Auto-detected if not set
+      - SERVER_IP=${SERVER_IP:-}
+    
+    volumes:
+      # Direct bind mount (Works with unfs3 userspace NFS server)
+      - ../openseastack/images/rootfs-raw:/nfs/rootfs
+      # TFTP boot files 
+      - rpi-tftpboot:/tftpboot
+      # Persistent image storage (for Web UI downloads/imports)
+      - rpi-images:/images
+      # Logs
+      - ./logs:/var/log/netboot
+    
+    ports:
+      # Web UI
+      - "38434:38434"
+    
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "pgrep", "dnsmasq"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  rpi-tftpboot:
+    name: rpi-tftpboot
+  rpi-images:
+    name: rpi-images
