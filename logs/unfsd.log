@@ -1,3 +1,0 @@
-UNFS3 unfsd 0.11.0 (C) 2003-2025, various authors
-/nfs/rootfs: ip ::/0 options 5
-/tftpboot: ip ::/0 options 1
